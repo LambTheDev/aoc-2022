@@ -21,17 +21,20 @@ fn main() -> Result<()> {
 fn part1(input: &str) -> Result<String> {
     // rust has an implementation to convert from Vec<Result<_>> to Result<Vec<_>>
     // we just need to provide the wanted type here
-    let rounds: Result<Vec<_>> = input.lines().map(parse_round).collect();
+    let rounds: Result<Vec<_>> = input.lines().map(parse_round_part1).collect();
     let score: i32 = rounds?.iter().map(get_score).sum();
 
     Ok(score.to_string())
 }
 
-fn part2(_input: &str) -> Result<String> {
-    Err("not implemented".into())
+fn part2(input: &str) -> Result<String> {
+    let rounds: Result<Vec<_>> = input.lines().map(parse_round_part2).collect();
+    let score: i32 = rounds?.iter().map(get_score).sum();
+
+    Ok(score.to_string())
 }
 
-fn parse_round(src: &str) -> Result<(Shapes, Shapes)> {
+fn parse_round_part1(src: &str) -> Result<(Shapes, Shapes)> {
     let opponent = match src.chars().nth(0).ok_or("unexpected input")? {
         'A' => Ok(Shapes::Rock),
         'B' => Ok(Shapes::Paper),
@@ -43,6 +46,31 @@ fn parse_round(src: &str) -> Result<(Shapes, Shapes)> {
         'Y' => Ok(Shapes::Paper),
         'Z' => Ok(Shapes::Scissors),
         _ => Err("invalid my shape"),
+    }?;
+
+    Ok((opponent, me))
+}
+
+fn parse_round_part2(src: &str) -> Result<(Shapes, Shapes)> {
+    let opponent = match src.chars().nth(0).ok_or("unexpected input")? {
+        'A' => Ok(Shapes::Rock),
+        'B' => Ok(Shapes::Paper),
+        'C' => Ok(Shapes::Scissors),
+        _ => Err("invalid opponent shape"),
+    }?;
+    let me = match src.chars().nth(2).ok_or("unexpected input")? {
+        'X' => match opponent {
+            Shapes::Rock => Ok(Shapes::Scissors),
+            Shapes::Paper => Ok(Shapes::Rock),
+            Shapes::Scissors => Ok(Shapes::Paper),
+        },
+        'Y' => Ok(opponent.clone()),
+        'Z' => match opponent {
+            Shapes::Rock => Ok(Shapes::Paper),
+            Shapes::Paper => Ok(Shapes::Scissors),
+            Shapes::Scissors => Ok(Shapes::Rock),
+        },
+        _ => Err("invalid round result"),
     }?;
 
     Ok((opponent, me))
@@ -70,7 +98,7 @@ fn get_score(round: &(Shapes, Shapes)) -> i32 {
     outcome_score + shape_score
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 enum Shapes {
     Rock,
     Paper,
