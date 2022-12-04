@@ -35,8 +35,17 @@ fn part1(input: &str) -> Result<String> {
     Ok(count.to_string())
 }
 
-fn part2(_input: &str) -> Result<String> {
-    Err("not implemented".into())
+fn part2(input: &str) -> Result<String> {
+    let ranges = parse_ranges(input);
+    let mut count = 0;
+
+    for ((l1, l2), (r1, r2)) in ranges {
+        if (l1 <= r2) && (l2 >= r1) {
+            count += 1;
+        }
+    }
+
+    Ok(count.to_string())
 }
 
 type Range = (u32, u32);
@@ -80,6 +89,17 @@ mod tests {
 
     #[test]
     fn part2_test() -> Result<()> {
+        let input = concat!(
+            "2-4,6-8\n",
+            "2-3,4-5\n",
+            "5-7,7-9\n",
+            "2-8,3-7\n",
+            "6-6,4-6\n",
+            "2-6,4-8",
+        );
+        let actual = part2(input)?;
+        assert_eq!(actual, "4");
+
         Ok(())
     }
 }
