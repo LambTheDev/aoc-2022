@@ -35,15 +35,29 @@ fn part1(input: &str) -> Result<String> {
         }
     }
 
-    let mut msg = String::new();
-    for mut stack in stacks {
-        msg.push(stack.pop().ok_or("unexpected empty stack")?);
-    }
-    Ok(msg)
+    get_message_from_stacks(stacks)
 }
 
-fn part2(_input: &str) -> Result<String> {
-    Err("not implemented".into())
+fn part2(input: &str) -> Result<String> {
+    let mut parts = input.split("\n\n");
+    let mut stacks = parse_stacks(parts.next().ok_or("stacks not found")?)?;
+    let commands = parse_commands(parts.next().ok_or("commands not found")?)?;
+
+    for command in commands {
+        let mut items: Vec<char> = Vec::new();
+        for _ in 0..command.amount {
+            let from = stacks.get_mut(command.from).ok_or("invalid from stack")?;
+            let item = from.pop().ok_or("unexpected empty stack")?;
+            items.push(item);
+        }
+        // insert in reverse order... even if it's not a realistic crane now though :D
+        for &item in items.iter().rev() {
+            let to = stacks.get_mut(command.to).ok_or("invalid to stack")?;
+            to.push(item);
+        }
+    }
+
+    get_message_from_stacks(stacks)
 }
 
 struct Command {
@@ -96,6 +110,14 @@ fn parse_commands(src: &str) -> Result<Vec<Command>> {
     Ok(commands)
 }
 
+fn get_message_from_stacks(stacks: Vec<Vec<char>>) -> Result<String> {
+    let mut msg = String::new();
+    for mut stack in stacks {
+        msg.push(stack.pop().ok_or("unexpected empty stack")?);
+    }
+    Ok(msg)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -121,6 +143,20 @@ mod tests {
 
     #[test]
     fn part2_test() -> Result<()> {
+        let input = concat!(
+            "    [D]    \n",
+            "[N] [C]    \n",
+            "[Z] [M] [P]\n",
+            " 1   2   3 \n",
+            "\n",
+            "move 1 from 2 to 1\n",
+            "move 3 from 1 to 3\n",
+            "move 2 from 2 to 1\n",
+            "move 1 from 1 to 2",
+        );
+        let actual = part2(input)?;
+        assert_eq!(actual, "MCD");
+
         Ok(())
     }
 }
