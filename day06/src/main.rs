@@ -34,8 +34,18 @@ fn part1(input: &str) -> Result<String> {
     Ok(nth_character.to_string())
 }
 
-fn part2(_input: &str) -> Result<String> {
-    Err("not implemented".into())
+fn part2(input: &str) -> Result<String> {
+    let data: Vec<char> = input.chars().collect();
+    let mut nth_character = 0;
+    for (i, window) in data.windows(14).enumerate() {
+        let hashset: HashSet<char> = HashSet::from_iter(window.iter().cloned());
+        if hashset.len() == 14 {
+            // see part1
+            nth_character = i + 14;
+            break;
+        }
+    }
+    Ok(nth_character.to_string())
 }
 
 #[cfg(test)]
@@ -53,6 +63,10 @@ mod tests {
 
     #[test]
     fn part2_test() -> Result<()> {
+        let input = "mjqjpqmgbljsphdztnvjfqwrcgsmlb";
+        let actual = part2(input)?;
+        assert_eq!(actual, "19");
+
         Ok(())
     }
 }
