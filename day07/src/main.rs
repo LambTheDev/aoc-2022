@@ -19,6 +19,25 @@ fn main() -> Result<()> {
 }
 
 fn part1(input: &str) -> Result<String> {
+    let sum: u32 = get_directory_sizes(input)?
+        .iter()
+        .filter(|x| **x < 100000)
+        .sum();
+    Ok(sum.to_string())
+}
+
+fn part2(input: &str) -> Result<String> {
+    let mut directory_sizes = get_directory_sizes(input)?;
+    let total_used = directory_sizes.last().unwrap();
+    let total_unused = 70000000 - total_used;
+    let needed = 30000000 - total_unused;
+
+    directory_sizes.sort();
+    let smallest = directory_sizes.iter().find(|x| **x > needed).unwrap();
+    Ok(smallest.to_string())
+}
+
+fn get_directory_sizes(input: &str) -> Result<Vec<u32>> {
     // The input seems to visit each directory depth first, and do "ls" on
     // first visit.
     // My idea here is to push the sum of all file sizes to a stack on "ls".
@@ -29,7 +48,7 @@ fn part1(input: &str) -> Result<String> {
     // unwinded the same way as "cd ..".
 
     let mut directory_size_stack: Vec<u32> = Vec::new();
-    let mut result_sum = 0;
+    let mut result: Vec<u32> = Vec::new();
 
     let pop_and_sum = |stack: &mut Vec<u32>| {
         let sum = stack.pop().unwrap_or(0);
@@ -55,9 +74,7 @@ fn part1(input: &str) -> Result<String> {
             }
             "cd .." => {
                 let sum = pop_and_sum(&mut directory_size_stack);
-                if sum < 100000 {
-                    result_sum += sum;
-                }
+                result.push(sum);
             }
             _ => (),
         }
@@ -66,50 +83,45 @@ fn part1(input: &str) -> Result<String> {
     // unwind rest of the stack
     for _ in 0..directory_size_stack.len() {
         let sum = pop_and_sum(&mut directory_size_stack);
-        if sum < 100000 {
-            result_sum += sum;
-        }
+        result.push(sum);
     }
 
-    Ok(result_sum.to_string())
-}
-
-fn part2(_input: &str) -> Result<String> {
-    Err("not implemented".into())
+    Ok(result)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    const INPUT: &str = concat!(
+        "$ cd /\n",
+        "$ ls\n",
+        "dir a\n",
+        "14848514 b.txt\n",
+        "8504156 c.dat\n",
+        "dir d\n",
+        "$ cd a\n",
+        "$ ls\n",
+        "dir e\n",
+        "29116 f\n",
+        "2557 g\n",
+        "62596 h.lst\n",
+        "$ cd e\n",
+        "$ ls\n",
+        "584 i\n",
+        "$ cd ..\n",
+        "$ cd ..\n",
+        "$ cd d\n",
+        "$ ls\n",
+        "4060174 j\n",
+        "8033020 d.log\n",
+        "5626152 d.ext\n",
+        "7214296 k"
+    );
+
     #[test]
     fn part1_test() -> Result<()> {
-        let input = concat!(
-            "$ cd /\n",
-            "$ ls\n",
-            "dir a\n",
-            "14848514 b.txt\n",
-            "8504156 c.dat\n",
-            "dir d\n",
-            "$ cd a\n",
-            "$ ls\n",
-            "dir e\n",
-            "29116 f\n",
-            "2557 g\n",
-            "62596 h.lst\n",
-            "$ cd e\n",
-            "$ ls\n",
-            "584 i\n",
-            "$ cd ..\n",
-            "$ cd ..\n",
-            "$ cd d\n",
-            "$ ls\n",
-            "4060174 j\n",
-            "8033020 d.log\n",
-            "5626152 d.ext\n",
-            "7214296 k"
-        );
-        let actual = part1(input)?;
+        let actual = part1(INPUT)?;
         assert_eq!(actual, "95437");
 
         Ok(())
@@ -117,6 +129,9 @@ mod tests {
 
     #[test]
     fn part2_test() -> Result<()> {
+        let actual = part2(INPUT)?;
+        assert_eq!(actual, "24933642");
+
         Ok(())
     }
 }
